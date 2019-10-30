@@ -1,0 +1,114 @@
+
+#Sample Inventory file [3 node] 1 master 1 infra 1 worker
+
+# Create an OSEv3 group that contains the masters, nodes, and etcd groups
+[OSEv3:children]
+masters
+nodes
+etcd
+
+# host group for masters
+[masters]
+master
+
+# host group for etcd
+[etcd]
+master
+
+# host group for nodes, includes region info
+[nodes]
+master openshift_node_group_name='node-config-master'
+node openshift_node_group_name='node-config-compute'
+infra openshift_node_group_name='node-config-infra'
+
+# ...Here we use label for master node and it will be labled as region = infra and node-role.kubernetes.io/compute=true
+# master openshift_node_labels="{'region':'infra', 'node-role.kubernetes.io/compute':'true'}"
+# ... 
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=root
+
+# If ansible_ssh_user is not root, ansible_become must be set to true
+ansible_become=true
+
+#Ensure the openshift_deployment_type parameter is set to openshift-enterprise to install the OpenShift Container Platform variant
+#Specifies the OpenShift deployment type. Possible values are openshift-enterprise and origin . Use a value of openshift-enterprise to install Red Hat OpenShift Container Platform
+#if we give origin it will select upstream version
+openshift_deployment_type=openshift-enterprise
+
+#Specifies the major version  to be installed
+openshift_release=v3.11
+
+#IN order to diable checking i.e if disk_availability , memory_availablity , package_version , etc..... i.e if something during check doesnt goes ok so it will stop,, so to overcome those we diable that thing
+#To disable specific pre-install checks
+openshift_disable_check=memory_availability,disk_availability
+openshift_disable_check=package_version
+openshift_disable_check=docker_image_availability
+
+
+
+# Ensure the openshift pull the image of the version specified from the provided registry
+# By default, all of the above images are pulled from the Red Hat Registry at registry.redhat.io. but know we provided the link so it will download from here
+oreg_url=registry.access.redhat.com/openshift3/ose-${component}:v3.11
+
+
+# If you need to configure your cluster to use an alternate registry, set oreg_url rather than rely on
+# openshift_docker_additional_registries=registry.access.redhat.com
+
+
+#If you want to block some registries 
+#openshift_docker_blocked_registries=docker.io
+
+
+#If you disable the service catalog, the OpenShift Ansible broker and template service broker are not installed.
+openshift_enable_service_catalog=false
+
+
+#A user-defined value for minimum disk space requirements might be set by setting
+openshift_check_min_host_disk_gb=2
+
+#Determine weather to install web console
+openshift_web_console_install=true
+
+
+
+# By default, all of the images are pulled from the Red Hat Registry at registry.redhat.io.
+# If you need to use a private registry to pull these images during the installation, you can specify the registry information ahead of time. 
+#Set the following Ansible variables in your inventory file, as required
+openshift_docker_insecure_registries=registry.access.redhat.com
+
+# Ensures that the docker daemon is using a storage driver supported by OpenShift Container Platform.
+# docker_storage_driver=devicemapper
+
+#For Docker Storage For storing Images
+container_runtime_docker_storage_setup_device=/dev/sdc
+
+
+#for Persistent Storage we use Gluster for storage
+# glusterfs_registry_storage
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_storage_volume_size=20Gi      
+
+#Making a group which contain nodes for hosting glusterfs storage pods , there we need to define the storage location in glusterfs_devices.
+[glusterfs]
+node0  glusterfs_devices='[ "/dev/vdb", "/dev/vdc", "/dev/vdd" ]'
+node1  glusterfs_devices='[ "/dev/vdb", "/dev/vdc", "/dev/vdd" ]'
+node2  glusterfs_devices='[ "/dev/vdb", "/dev/vdc", "/dev/vdd" ]'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
