@@ -1,0 +1,22 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gluster-container
+provisioner: kubernetes.io/glusterfs
+parameters:
+  resturl: "http://heketi-storage.glusterfs.svc:8080"
+  restuser: "admin"
+  volumetype: "replicate:3"
+  clusterid: "42b196149692435626a8e4d12ebbe62e"
+  secretNamespace: "glusterfs"
+  secretName: "heketi-storage-admin-secret"
+  volumeoptions: "user.heketi.arbiter true,user.heketi.average-file-size 1024"
+  volumenameprefix: "test-vol"
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+storage: 5Gi
+allowVolumeExpansion: true
